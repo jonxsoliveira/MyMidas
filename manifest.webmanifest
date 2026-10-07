@@ -1,12 +1,12 @@
 {
-  "name": "Finanças",
-  "short_name": "Finanças",
-  "description": "Controle financeiro pessoal, offline e privado.",
+  "name": "MyMidas",
+  "short_name": "MyMidas",
+  "description": "MyMidas: controle financeiro pessoal, offline e privado.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F3F4F9",
+  "background_color": "#17133A",
   "theme_color": "#4F2BFF",
   "lang": "pt-BR",
   "icons": [

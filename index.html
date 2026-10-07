@@ -6,12 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Finanças">
-<meta name="theme-color" content="#5B2EFF">
+<meta name="apple-mobile-web-app-title" content="MyMidas">
+<meta name="theme-color" content="#4F2BFF">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png">
-<title>Finanças</title>
+<title>MyMidas</title>
 <style>
 :root{
   --g:linear-gradient(135deg,#4F2BFF 0%,#9B3CF0 55%,#FF5C8A 100%); --accent:#6D3BFF; --accent-soft:#EFEAFF; --tc:#5B2EFF;
@@ -217,7 +217,7 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .onb .inp{background:rgba(255,255,255,.18);border-color:transparent;color:#fff;font-size:18px;padding:16px}
 .onb .inp::placeholder{color:rgba(255,255,255,.7)}
 .onb .btn{background:#fff;color:var(--tc);margin-top:14px}
-.onb .logo{width:72px;height:72px;border-radius:22px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:34px;margin-bottom:24px}
+.onb .logo{width:84px;height:84px;border-radius:22.5%;margin-bottom:24px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:block}
 .back{width:40px;height:40px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;color:#fff}
 .menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
 .mtile{background:var(--bg);border-radius:18px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;font-weight:600;text-align:center}
@@ -258,6 +258,22 @@ body.locked{position:fixed;left:0;right:0;overflow:hidden}
 .opt .d{width:12px;height:12px;border-radius:50%;background:var(--c)}
 .opt-h{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:14px 4px 2px}
 .sticky-act{position:sticky;bottom:calc(-18px - var(--sb));background:var(--card);padding:12px 0 calc(18px + var(--sb));margin-top:8px;display:flex;gap:10px}
+#lock{position:fixed;inset:0;z-index:100;background:var(--g);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(var(--st) + 20px) 24px calc(var(--sb) + 20px);text-align:center;touch-action:none}
+#lock .lk-av{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.5);display:grid;place-items:center;font-size:26px;font-weight:800;margin-bottom:16px}
+#lock .lk-t{font-size:20px;font-weight:700}
+#lock .lk-s{font-size:14px;opacity:.9;min-height:20px;margin-top:6px}
+#lock .dots{display:flex;gap:18px;margin:20px 0 34px}
+#lock .dots i{width:15px;height:15px;border-radius:50%;border:2px solid #fff}
+#lock .dots i.f{background:#fff}
+#lock .dots.shake{animation:shake .35s}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+#lock .pad{display:grid;grid-template-columns:repeat(3,76px);gap:16px 26px}
+#lock .pad button{width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:30px;font-weight:500;touch-action:manipulation}
+#lock .pad button:active{background:rgba(255,255,255,.35)}
+#lock .pad button.t{background:none;font-size:15px;font-weight:700}
+#lock .lk-forgot{margin-top:26px;color:#fff;opacity:.85;font-size:14px;font-weight:600}
+#lock .lk-box{background:rgba(255,255,255,.14);border-radius:18px;padding:16px;font-size:15px;max-width:340px;margin:16px 0}
+#lock .btn{max-width:340px}
 </style>
 </head>
 <body>
@@ -444,6 +460,7 @@ function render() {
   app.innerHTML = v();
   const tabs = [['home', I.home, 'Início'], ['extrato', I.list, 'Extrato'], ['+'], ['bancos', I.bank, 'Bancos'], ['objetivos', I.goal, 'Objetivos']];
   const act = ui.tab === 'bank' ? 'bancos' : ui.tab;
+  if (ui.tab === 'config') faceAvailable().then(ok => { const r = document.getElementById('face-row'); if (r && ok) r.style.display = 'flex'; });
   tb.innerHTML = tabs.map(([k, ic, l]) => k === '+' ? `<button class="plus" data-act="plusMenu" aria-label="Novo lançamento">${I.plus}</button>`
     : `<button class="${act === k ? 'on' : ''}" data-act="tab" data-tab="${k}">${ic}<span>${l}</span></button>`).join('');
 }
@@ -451,8 +468,8 @@ function hello() { const h = new Date().getHours(); return h < 5 ? 'Boa noite' :
 
 /* ---------- Onboarding ---------- */
 function viewOnboarding() {
-  return `<div class="onb"><div class="logo">💸</div><h1>Bem-vindo ao seu controle financeiro</h1>
-    <p>Anote seus gastos em segundos, veja para onde o dinheiro vai e planeje o próximo mês. Tudo fica salvo só no seu celular.</p>
+  return `<div class="onb"><img class="logo" src="icons/icon-192.png" alt="MyMidas"><h1>Bem-vindo ao MyMidas</h1>
+    <p>Seu controle financeiro para subir de nível: anote gastos em segundos, veja para onde o dinheiro vai e planeje o próximo mês. Tudo fica salvo só no seu celular.</p>
     <label class="lb" style="color:rgba(255,255,255,.85)">Como podemos te chamar?</label>
     <input class="inp" id="onb-name" placeholder="Seu nome" autocomplete="given-name">
     <button class="btn" data-act="onbGo">Começar</button></div>`;
@@ -490,6 +507,7 @@ function viewHome() {
       <button class="bigact exp" data-act="newTx" data-kind="expense"><div class="ic">${I.down}</div><b>Lançar despesa</b><span>Débito, Pix ou cartão</span></button>
     </div>
     ${isIOS && !standalone && !S.settings.installDismissed ? `<div class="banner">📲 <span>Instale o app: toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</span><button class="x" data-act="dismissInstall">✕</button></div>` : ''}
+    ${backupBanner()}
     ${!S.banks.length ? `<div class="banner">🏦 <span>Comece cadastrando seus bancos para acompanhar saldos e faturas.</span><button class="btn sm pri" data-act="newBank">Cadastrar</button></div>` : ''}
     ${alerts.map(({ b, inv }) => { const s = invoiceStatus(b, inv); return `<div class="banner" style="border-left:4px solid var(--${s.cls === 'bad' ? 'out' : 'warn'})">💳 <span>Fatura <b>${esc(b.name)}</b> de ${money(inv.rest)} — ${inv.due < today() ? 'venceu' : 'vence'} ${inv.due === today() ? 'hoje' : 'em ' + fmtD(inv.due)}${b.autoDebit ? ' · <i>débito automático</i>' : ''}</span><button class="btn sm" data-act="payInv" data-bank="${b.id}" data-ym="${inv.ym}">${b.autoDebit ? 'Confirmar' : 'Pagar'}</button></div>`; }).join('')}
     <div class="card">
@@ -661,15 +679,17 @@ function viewConfig() {
   <div class="wrap" style="margin-top:16px">
     <div class="card"><h3>👤 Perfil</h3><label class="fld"><span class="lb">Seu nome</span><input class="inp" id="cfg-name" value="${esc(S.settings.name)}"></label>
       <label class="switch" style="margin:0"><input type="checkbox" id="cfg-hide" ${S.settings.hide ? 'checked' : ''}> <span>Ocultar valores ao abrir o app</span></label></div>
+    ${lockCard()}
     <div class="card"><h3>🎨 Tema</h3><div class="themes">${THEMES.map(([k, l]) => `<button data-theme="${k}" class="${S.settings.theme === k ? 'on' : ''}" data-act="setTheme" data-t="${k}">${l}</button>`).join('')}</div></div>
     <div class="card"><h3>🏷️ Categorias</h3><button class="btn" data-act="manageCats">Gerenciar categorias</button></div>
     <div class="card"><h3>💾 Cópia de segurança</h3>
       <div class="small muted" style="margin-bottom:12px">Seus dados ficam só neste celular. Faça uma cópia de vez em quando (salve no iCloud Drive, por exemplo) para não perder nada se trocar de aparelho.</div>
       <div class="btns"><button class="btn" data-act="exportData">⬆️ Exportar</button><button class="btn" data-act="importData">⬇️ Importar</button></div>
-      <div class="tiny muted" style="margin-top:10px">${S.tx.length} lançamentos · ${S.banks.length} bancos · ${S.goals.length} objetivos</div></div>
+      <div class="tiny muted" style="margin-top:10px">${S.tx.length} lançamentos · ${S.banks.length} bancos · ${S.goals.length} objetivos · última cópia: ${S.settings.lastBackup ? fmtD(S.settings.lastBackup) : 'nunca'}</div>
+      ${backupFreqSelect()}</div>
     <div class="card"><h3>📲 Instalar no iPhone</h3><div class="small">No Safari, toque em <b>Compartilhar</b> (quadrado com seta ↑) e depois em <b>Adicionar à Tela de Início</b>. O app passa a abrir em tela cheia e funciona sem internet.</div></div>
     <div class="card"><h3 style="color:var(--out)">⚠️ Zona de perigo</h3><button class="btn danger" data-act="wipe">Apagar todos os dados</button></div>
-    <div class="tiny muted" style="text-align:center;margin:10px 0 20px">Finanças · versão 1.2 · funciona offline</div>
+    <div class="tiny muted" style="text-align:center;margin:10px 0 20px">MyMidas · versão 1.4 · funciona offline</div>
   </div>`;
 }
 
@@ -951,7 +971,96 @@ function backupHtml() {
     <div class="det"><span>Última cópia</span><b>${lb ? fmtD(lb) : 'nunca'}</b></div>
     <div class="det" style="margin-bottom:16px"><span>Conteúdo</span><b>${S.tx.length} lançamentos · ${S.banks.length} bancos</b></div>
     <button class="btn pri" data-act="exportData">⬆️ Exportar cópia</button>
-    <button class="btn" style="margin-top:10px" data-act="importData">⬇️ Importar cópia</button>`;
+    <button class="btn" style="margin-top:10px" data-act="importData">⬇️ Importar cópia</button>
+    ${backupFreqSelect()}`;
+}
+
+const daysBetween = (a, b) => Math.round((parseDs(b) - parseDs(a)) / 86400000);
+function backupBase() { if (S.settings.lastBackup) return S.settings.lastBackup; const ds0 = S.tx.map(x => x.launched || x.date).filter(Boolean).sort(); return ds0[0] && ds0[0] < today() ? ds0[0] : (S.settings.since || today()); }
+function backupDue() {
+  const ev = S.settings.backupEvery ?? 15, t = today();
+  if (!ev || !S.tx.length) return false;
+  if (S.settings.backupSnooze && S.settings.backupSnooze > t) return false;
+  return daysBetween(backupBase(), t) >= ev;
+}
+function backupBanner() {
+  if (!backupDue()) return '';
+  const lb = S.settings.lastBackup, d = lb ? daysBetween(lb, today()) : 0;
+  return `<div class="banner" style="border-left:4px solid var(--accent)">💾 <span>${lb ? `Faz <b>${d} dias</b> desde a sua última cópia de segurança.` : 'Você ainda <b>não fez nenhuma cópia de segurança</b> dos seus dados.'}</span>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-left:auto"><button class="btn sm pri" data-act="menuBackup">Fazer agora</button><button class="small muted" style="font-weight:600" data-act="snoozeBackup">Depois</button></div></div>`;
+}
+function backupFreqSelect() {
+  const ev = S.settings.backupEvery ?? 15;
+  return `<label class="fld" style="margin:14px 0 0"><span class="lb">Lembrar de fazer cópia</span><select class="inp" id="cfg-bkp">${[[7, 'A cada 7 dias'], [15, 'A cada 15 dias'], [30, 'A cada 30 dias'], [0, 'Nunca']].map(([v, l]) => `<option value="${v}" ${ev === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`;
+}
+
+/* ---------- Bloqueio do app (PIN / Face ID) ---------- */
+// Observação: o PIN impede que outra pessoa abra o app no seu celular. O PIN é guardado só como "hash" (não dá para lê-lo de volta).
+const LOCK_DEF = { on: false, hash: '', salt: '', after: 1, faceId: '' };
+const LK = () => (S.settings.lock = Object.assign({}, LOCK_DEF, S.settings.lock || {}));
+const hex = a => [...a].map(x => x.toString(16).padStart(2, '0')).join('');
+const rnd = n => crypto.getRandomValues(new Uint8Array(n));
+async function sha(t) { if (crypto.subtle) return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))); let h = 0; for (const c of t) h = (h * 31 + c.charCodeAt(0)) | 0; return 'x' + h; }
+const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function faceAvailable() { try { return !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch (e) { return false; } }
+async function faceRegister() {
+  const c = await navigator.credentials.create({ publicKey: { challenge: rnd(32), rp: { name: 'MyMidas' }, user: { id: rnd(16), name: 'mymidas', displayName: 'MyMidas (' + S.settings.name + ')' },
+    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }], authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' }, timeout: 60000, attestation: 'none' } });
+  LK().faceId = b64(c.rawId); save();
+}
+async function faceCheck() {
+  await navigator.credentials.get({ publicKey: { challenge: rnd(32), allowCredentials: [{ type: 'public-key', id: unb64(LK().faceId), transports: ['internal'] }], userVerification: 'required', timeout: 60000 } });
+}
+let P = null, pinFails = 0, pinUntil = 0;
+function showPin(mode, opts = {}) { P = Object.assign({ mode, buf: '', first: '', msg: '' }, opts); renderPin(); }
+function renderPin() {
+  let el = document.getElementById('lock');
+  if (!el) { el = document.createElement('div'); el.id = 'lock'; document.body.appendChild(el); lockScroll(); }
+  const L = LK(), nm = initials((S.settings.name || '').split(' ')[0]);
+  if (P.mode === 'forgot') {
+    el.innerHTML = `<div class="lk-av">🔒</div><div class="lk-t">Esqueceu o PIN?</div>
+      <div class="lk-box">Por segurança, não dá para ver o PIN nem abrir o app sem ele.<br><br>Você pode <b>apagar os dados deste app e recomeçar</b>. Depois, em <b>Cópia de segurança › Importar</b>, restaure sua última cópia.</div>
+      <button class="btn" style="background:#fff;color:var(--tc);margin-bottom:10px" data-act="pinBack">Voltar e tentar de novo</button>
+      <button class="btn" style="background:rgba(255,255,255,.18);color:#fff" data-act="pinWipe">${P.confirm ? 'Toque de novo para confirmar' : 'Apagar dados e recomeçar'}</button>`;
+    return;
+  }
+  const titles = { unlock: 'Digite seu PIN', set1: 'Crie um PIN de 4 números', set2: 'Confirme o novo PIN', verify: 'Digite o PIN atual' };
+  const left = Math.ceil((pinUntil - Date.now()) / 1000);
+  el.innerHTML = `<div class="lk-av">${esc(nm)}</div><div class="lk-t">${titles[P.mode]}</div><div class="lk-s">${left > 0 ? `Muitas tentativas. Aguarde ${left}s.` : esc(P.msg)}</div>
+    <div class="dots ${P.shake ? 'shake' : ''}">${[0, 1, 2, 3].map(i => `<i class="${i < P.buf.length ? 'f' : ''}"></i>`).join('')}</div>
+    <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button data-act="pinKey" data-v="${n}">${n}</button>`).join('')}
+      ${P.mode === 'unlock' ? (L.faceId ? '<button class="t" data-act="faceUnlock">Face ID</button>' : '<span></span>') : '<button class="t" data-act="pinCancel">Cancelar</button>'}
+      <button data-act="pinKey" data-v="0">0</button><button class="t" data-act="pinDel" aria-label="Apagar">⌫</button></div>
+    ${P.mode === 'unlock' ? '<button class="lk-forgot" data-act="pinForgot">Esqueci o PIN</button>' : ''}`;
+  P.shake = false;
+  if (left > 0) setTimeout(() => { if (P && document.getElementById('lock')) renderPin(); }, 1000);
+}
+function closePin() { const el = document.getElementById('lock'); if (el) el.remove(); P = null; if (!document.getElementById('sheet')) unlockScroll(); }
+async function handlePin() {
+  const L = LK(), b = P.buf;
+  if (P.mode === 'unlock' || P.mode === 'verify') {
+    if (await sha(L.salt + b) === L.hash) { pinFails = 0; const ok = P.onOk; closePin(); if (ok) ok(); return; }
+    pinFails++; if (pinFails >= 5) { pinFails = 0; pinUntil = Date.now() + 30000; }
+    Object.assign(P, { buf: '', msg: 'PIN incorreto', shake: true }); return renderPin();
+  }
+  if (P.mode === 'set1') { Object.assign(P, { mode: 'set2', first: b, buf: '', msg: '' }); return renderPin(); }
+  if (P.mode === 'set2') {
+    if (b !== P.first) { Object.assign(P, { mode: 'set1', buf: '', first: '', msg: 'Os PINs não conferem. Tente de novo.', shake: true }); return renderPin(); }
+    const salt = hex(rnd(16)); Object.assign(L, { on: true, salt, hash: await sha(salt + b) }); save();
+    closePin(); render(); toast('Bloqueio ativado ✓');
+    if (!L.faceId && await faceAvailable()) setTimeout(async () => { if (await ask('Quer usar também o <b>Face ID</b> para desbloquear o app?', 'Usar Face ID')) { try { await faceRegister(); render(); toast('Face ID ativado ✓'); } catch (e) { toast('Não foi possível ativar o Face ID'); } } }, 300);
+  }
+}
+function lockCard() {
+  const L = LK();
+  return `<div class="card"><h3>🔒 Bloqueio do app</h3>
+    <div class="small muted" style="margin-bottom:12px">Pede um PIN${L.faceId ? ' ou Face ID' : ''} ao abrir o app. Assim, ninguém vê seus dados se pegar seu celular desbloqueado.</div>
+    ${L.on ? `<div class="det"><span>Status</span><b class="in">Ativado</b></div>
+      <label class="fld" style="margin-top:12px"><span class="lb">Bloquear de novo quando eu sair do app</span><select class="inp" id="cfg-lockafter">${[[0, 'Imediatamente'], [1, 'Após 1 minuto'], [5, 'Após 5 minutos'], [15, 'Após 15 minutos']].map(([v, l]) => `<option value="${v}" ${L.after === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="switch" id="face-row" style="display:${L.faceId ? 'flex' : 'none'}"><input type="checkbox" id="cfg-face" ${L.faceId ? 'checked' : ''}><span>Desbloquear com Face ID</span></label>
+      <div class="btns"><button class="btn" data-act="pinChange">Trocar PIN</button><button class="btn danger" data-act="pinOff">Desativar</button></div>`
+    : '<button class="btn pri" data-act="pinOn">Ativar bloqueio com PIN</button>'}</div>`;
 }
 
 /* ---------- Menu do perfil ---------- */
@@ -1038,12 +1147,18 @@ document.addEventListener('change', e => {
   if (el.dataset.ef) { ui.ef[el.dataset.ef] = el.value; render(); }
   if (el.id === 'cfg-name') { const v = el.value.trim(); if (v) { S.settings.name = v; save(); toast('Nome atualizado ✓'); } }
   if (el.id === 'cfg-hide') { S.settings.hide = el.checked; save(); }
+  if (el.id === 'cfg-bkp') { S.settings.backupEvery = +el.value; save(); render(); toast(+el.value ? 'Lembrete a cada ' + el.value + ' dias ✓' : 'Lembrete desligado'); }
+  if (el.id === 'cfg-face') {
+    if (el.checked) faceRegister().then(() => toast('Face ID ativado ✓')).catch(() => { el.checked = false; toast('Não foi possível ativar o Face ID'); });
+    else { LK().faceId = ''; save(); toast('Face ID desativado'); }
+  }
+  if (el.id === 'cfg-lockafter') { S.settings.lock.after = +el.value; save(); toast('Ajuste salvo ✓'); }
   if (el.id === 'imp-file') {
     const file = el.files[0]; if (!file) return;
     file.text().then(async txt => {
       let d; try { d = normalize(JSON.parse(txt)); } catch (x) { return toast('Arquivo inválido'); }
       if (!await ask(`Restaurar esta cópia?<br><span class="small muted">${d.tx.length} lançamentos, ${d.banks.length} bancos, ${d.goals.length} objetivos. Os dados atuais serão substituídos.</span>`, 'Restaurar', true)) return;
-      S = d; save(); render(); toast('Cópia restaurada ✓');
+      const lk = S.settings.lock; S = d; S.settings.lock = lk; save(); render(); toast('Cópia restaurada ✓');
     });
     el.value = '';
   }
@@ -1051,7 +1166,7 @@ document.addEventListener('change', e => {
 
 /* ================= Ações ================= */
 const A = {
-  onbGo: () => { const v = (document.getElementById('onb-name').value || '').trim(); if (!v) return toast('Digite seu nome'); S.settings.name = v; save(); render(); window.scrollTo(0, 0); },
+  onbGo: () => { const v = (document.getElementById('onb-name').value || '').trim(); if (!v) return toast('Digite seu nome'); S.settings.name = v; S.settings.since = today(); save(); render(); window.scrollTo(0, 0); },
   tab: el => { ui.tab = el.dataset.tab; if (el.dataset.ym) { ui.ef.mode = 'month'; ui.ef.ym = el.dataset.ym; } render(); window.scrollTo(0, 0); },
   profileMenu: () => openSheet('Menu', profileMenuHtml()),
   pixFriends: () => openFriends(),
@@ -1061,6 +1176,17 @@ const A = {
   menuCats: () => openSheet('Categorias', catsHtml()),
   toggleHideMenu: () => { S.settings.hide = !S.settings.hide; save(); render(); setSheetBody(profileMenuHtml()); },
   menuBackup: () => openSheet('💾 Cópia de segurança', backupHtml()),
+  pinOn: () => showPin('set1'),
+  pinChange: () => showPin('verify', { onOk: () => showPin('set1') }),
+  pinOff: () => showPin('verify', { onOk: () => { Object.assign(LK(), { on: false, hash: '', salt: '', faceId: '' }); save(); render(); toast('Bloqueio desativado'); } }),
+  pinKey: el => { if (!P || pinUntil > Date.now() || P.buf.length >= 4) return; P.buf += el.dataset.v; P.msg = ''; renderPin(); if (P.buf.length === 4) setTimeout(handlePin, 120); },
+  pinDel: () => { if (P) { P.buf = P.buf.slice(0, -1); renderPin(); } },
+  pinCancel: () => { closePin(); render(); },
+  pinForgot: () => { P.mode = 'forgot'; P.confirm = false; renderPin(); },
+  pinBack: () => showPin('unlock'),
+  pinWipe: () => { if (!P.confirm) { P.confirm = true; return renderPin(); } S = freshState(); save(); closePin(); ui.tab = 'home'; render(); toast('Dados apagados. Importe sua cópia em Ajustes, se tiver.'); },
+  faceUnlock: async () => { try { await faceCheck(); pinFails = 0; closePin(); } catch (e) { if (P) { P.msg = 'Face ID não confirmado. Use o PIN.'; renderPin(); } } },
+  snoozeBackup: () => { S.settings.backupSnooze = addDays(today(), 3); save(); render(); toast('Ok, eu te lembro de novo em 3 dias'); },
   menuBanks: () => { closeSheet(true); ui.tab = 'bancos'; render(); window.scrollTo(0, 0); },
   menuConfig: () => { closeSheet(true); ui.tab = 'config'; render(); window.scrollTo(0, 0); },
   newFriend: () => openFriendForm(null),
@@ -1195,12 +1321,12 @@ const A = {
     save(); render(); openSheet('Categorias', catsHtml()); toast(n + ' lançamento(s) movido(s) e categoria excluída ✓');
   },
   exportData: async () => {
-    const name = 'financas-backup-' + today() + '.json';
-    S.settings.lastBackup = today(); save();
+    const name = 'mymidas-backup-' + today() + '.json';
+    const done = () => { S.settings.lastBackup = today(); S.settings.backupSnooze = ''; save(); render(); if (document.getElementById('sheet')) setSheetBody(backupHtml()); toast('Cópia de segurança feita ✓'); };
     const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' });
     const file = new File([blob], name, { type: 'application/json' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'Backup Finanças' }); return; } catch (e) { if (e.name === 'AbortError') return; } }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500);
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'Backup MyMidas' }); return done(); } catch (e) { if (e.name === 'AbortError') return; } }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); done();
   },
   importData: () => document.getElementById('imp-file').click(),
   wipe: async () => { if (!await ask('Apagar <b>todos</b> os bancos, lançamentos e objetivos deste celular? Isso não pode ser desfeito.', 'Apagar tudo', true)) return; S = freshState(); save(); ui.tab = 'home'; render(); }
@@ -1212,6 +1338,13 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'onb-name') A.onbGo(); });
 
 render();
+if (S.settings.name && LK().on) showPin('unlock');
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  const L = LK(); if (!L.on || !S.settings.name) return;
+  if (document.hidden) { hiddenAt = Date.now(); if (L.after === 0 && !document.getElementById('lock')) showPin('unlock'); }
+  else if (!document.getElementById('lock') && hiddenAt && Date.now() - hiddenAt >= L.after * 60000) showPin('unlock');
+});
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
