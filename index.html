@@ -153,9 +153,10 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke
 /* Sheet */
 .ov{position:fixed;inset:0;background:rgba(8,10,20,.45);z-index:40;opacity:0;transition:opacity .2s}
 .ov.show{opacity:1}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--card);border-radius:26px 26px 0 0;max-height:94vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-width:520px;margin:0 auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--card);border-radius:26px 26px 0 0;max-height:calc(100vh - var(--st) - 14px);max-height:calc(100dvh - var(--st) - 14px);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-width:520px;margin:0 auto}
 .sheet.show{transform:none}
 .sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:8px auto 0}
+.sheet.dragging{transition:none}
 .sheet .sh{display:flex;align-items:center;padding:10px 18px 6px}
 .sheet .sh h2{margin:0;font-size:19px}
 .sheet .sh .x{margin-left:auto;width:34px;height:34px;border-radius:50%;background:var(--bg);display:grid;place-items:center}
@@ -689,7 +690,7 @@ function viewConfig() {
       ${backupFreqSelect()}</div>
     <div class="card"><h3>📲 Instalar no iPhone</h3><div class="small">No Safari, toque em <b>Compartilhar</b> (quadrado com seta ↑) e depois em <b>Adicionar à Tela de Início</b>. O app passa a abrir em tela cheia e funciona sem internet.</div></div>
     <div class="card"><h3 style="color:var(--out)">⚠️ Zona de perigo</h3><button class="btn danger" data-act="wipe">Apagar todos os dados</button></div>
-    <div class="tiny muted" style="text-align:center;margin:10px 0 20px">MyMidas · versão 1.4 · funciona offline</div>
+    <div class="tiny muted" style="text-align:center;margin:10px 0 20px">MyMidas · versão 1.4.1 · funciona offline</div>
   </div>`;
 }
 
@@ -704,7 +705,31 @@ function openSheet(title, body, onClose) {
   const sh = document.createElement('div'); sh.className = 'sheet'; sh.id = 'sheet';
   sh.innerHTML = `<div class="grab"></div><div class="sh"><h2>${title}</h2><button class="x" data-act="closeSheet" aria-label="Fechar">${I.x}</button></div><div class="sb" id="sheet-body">${body}</div>`;
   document.body.append(ov, sh); sheetOnClose = onClose || null;
+  enableSwipeClose(sh);
   requestAnimationFrame(() => { ov.classList.add('show'); sh.classList.add('show'); });
+}
+function enableSwipeClose(sh) {
+  let y0 = null, dy = 0, fromBody = false;
+  const body = sh.querySelector('.sb');
+  sh.addEventListener('touchstart', e => {
+    const inHead = !!e.target.closest('.grab,.sh'); fromBody = !inHead;
+    if (fromBody && body.scrollTop > 0) { y0 = null; return; }
+    if (e.target.closest('input,textarea,select')) { y0 = null; return; }
+    y0 = e.touches[0].clientY; dy = 0;
+  }, { passive: true });
+  sh.addEventListener('touchmove', e => {
+    if (y0 === null) return;
+    dy = e.touches[0].clientY - y0;
+    if (dy <= 0) { if (fromBody) y0 = null; dy = 0; sh.style.transform = ''; return; }
+    if (fromBody && body.scrollTop > 0) { y0 = null; return; }
+    e.preventDefault(); sh.classList.add('dragging'); sh.style.transform = `translateY(${dy}px)`;
+  }, { passive: false });
+  const end = () => {
+    if (y0 === null) return; y0 = null; sh.classList.remove('dragging');
+    if (dy > 110) { sh.style.transform = ''; closeSheet(); } else sh.style.transform = '';
+    dy = 0;
+  };
+  sh.addEventListener('touchend', end); sh.addEventListener('touchcancel', end);
 }
 function setSheetBody(html) { const b = document.getElementById('sheet-body'); if (b) { const st = b.scrollTop; b.innerHTML = html; b.scrollTop = st; } }
 function closeSheet(instant) {
