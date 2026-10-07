@@ -211,7 +211,7 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 @keyframes tin{from{opacity:0;transform:translate(-50%,10px)}}
 .banner{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:18px;padding:12px 14px;margin-bottom:14px;box-shadow:var(--sh);font-size:13.5px}
 .banner .x{margin-left:auto;color:var(--muted);font-size:18px;padding:4px}
-.onb{min-height:100vh;background:var(--g);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:calc(var(--st) + 30px) 28px calc(var(--sb) + 30px)}
+.onb{min-height:100vh;min-height:100dvh;background:var(--g);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:calc(var(--st) + 30px) 28px calc(var(--sb) + 30px)}
 .onb h1{font-size:34px;line-height:1.1;margin:0 0 12px;font-weight:800}
 .onb p{opacity:.9;margin:0 0 28px;font-size:16px}
 .onb .inp{background:rgba(255,255,255,.18);border-color:transparent;color:#fff;font-size:18px;padding:16px}
@@ -219,7 +219,7 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .onb .btn{background:#fff;color:var(--tc);margin-top:14px}
 .onb .logo{width:72px;height:72px;border-radius:22px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:34px;margin-bottom:24px}
 .back{width:40px;height:40px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;color:#fff}
-.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
 .mtile{background:var(--bg);border-radius:18px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;font-weight:600;text-align:center}
 .mtile .e{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:var(--card)}
 .mtile.hl .e{background:var(--g);color:#fff}
@@ -234,11 +234,36 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .friend .acts{display:flex;gap:6px}
 .friend .acts button{width:40px;height:40px;border-radius:12px;background:var(--bg);display:grid;place-items:center;font-size:17px}
 .friend .acts button.pix{background:var(--accent-soft);color:var(--accent)}
+body.onbmode #app{padding-bottom:0;min-height:0}
+body.onbmode{overscroll-behavior:none}
+/* trava a tela de trás quando uma janela está aberta */
+body.locked{position:fixed;left:0;right:0;overflow:hidden}
+.ov{touch-action:none}
+.sheet .grab,.sheet .sh{touch-action:none}
+.sheet .sb{overscroll-behavior:contain}
+/* filtros do extrato */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.fbtn{display:flex;align-items:center;gap:6px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:9px 12px;text-align:left;min-width:0}
+.fbtn .fl{font-size:11.5px;color:var(--muted);font-weight:600}
+.fbtn .fv{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbtn > div{flex:1;min-width:0}
+.fbtn svg{width:16px;height:16px;color:var(--muted);transform:rotate(90deg);flex:none}
+.fbtn.on{border-color:var(--accent);background:var(--accent-soft)}
+.fbtn.on .fv{color:var(--accent)}
+.opt{display:flex;align-items:center;gap:12px;width:100%;padding:12px 4px;border-bottom:1px solid var(--line);text-align:left;font-size:15px}
+.opt .ck{width:24px;height:24px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;flex:none;color:#fff;font-size:14px;font-weight:800}
+.opt.on .ck{background:var(--accent);border-color:var(--accent)}
+.opt.radio .ck{border-radius:50%}
+.opt .ic{font-size:20px;width:26px;text-align:center}
+.opt .d{width:12px;height:12px;border-radius:50%;background:var(--c)}
+.opt-h{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:14px 4px 2px}
+.sticky-act{position:sticky;bottom:calc(-18px - var(--sb));background:var(--card);padding:12px 0 calc(18px + var(--sb));margin-top:8px;display:flex;gap:10px}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <nav class="tabbar" id="tabbar"></nav>
+<input type="file" id="imp-file" accept=".json,application/json" style="display:none">
 <script>
 'use strict';
 /* ================= Ícones ================= */
@@ -317,7 +342,7 @@ function save() { S.savedAt = Date.now(); try { localStorage.setItem(KEY, JSON.s
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
 const ui = { tab: 'home', homeYm: curYm(), bankId: null,
-  ef: { mode: 'month', ym: curYm(), from: '', to: '', kind: 'all', bank: '', method: '', cat: '', q: '' } };
+  ef: { mode: 'month', ym: curYm(), from: '', to: '', kinds: [], banks: [], methods: [], cats: [], q: '' } };
 
 /* ================= Regras financeiras ================= */
 const bankById = id => S.banks.find(b => b.id === id);
@@ -412,6 +437,7 @@ function setTheme() {
 function render() {
   setTheme();
   const app = document.getElementById('app'), tb = document.getElementById('tabbar');
+  document.body.classList.toggle('onbmode', !S.settings.name);
   if (!S.settings.name) { app.innerHTML = viewOnboarding(); tb.style.display = 'none'; return; }
   tb.style.display = '';
   const v = { home: viewHome, extrato: viewExtrato, bancos: viewBancos, bank: viewBank, objetivos: viewObjetivos, config: viewConfig }[ui.tab] || viewHome;
@@ -508,10 +534,10 @@ function extratoList() {
   return S.tx.filter(x => {
     if (f.mode === 'month') { if ((x.kind === 'expense' ? compYm(x) : x.kind === 'payment' ? x.date.slice(0, 7) : x.date.slice(0, 7)) !== f.ym) return false; }
     else { if (f.from && x.date < f.from) return false; if (f.to && x.date > f.to) return false; }
-    if (f.kind !== 'all' && x.kind !== f.kind && !(f.kind === 'transfer' && x.kind === 'payment')) return false;
-    if (f.bank && x.bankId !== f.bank) return false;
-    if (f.method && !(x.kind === 'expense' && x.method === f.method)) return false;
-    if (f.cat && x.cat !== f.cat) return false;
+    if (f.kinds.length && !f.kinds.includes(x.kind === 'payment' ? 'transfer' : x.kind)) return false;
+    if (f.banks.length && !(f.banks.includes(x.bankId || (x.method === 'cash' ? '_cash' : '')) || (x.cardBank && f.banks.includes(x.cardBank)))) return false;
+    if (f.methods.length && !(x.kind === 'expense' && f.methods.includes(x.method))) return false;
+    if (f.cats.length && !f.cats.includes(x.cat)) return false;
     if (q) { const c = catOf(x.kind, x.cat); const g = goalById(x.goalId); const hay = [x.desc, x.obs, c.name, (bankById(x.bankId) || {}).name, g && g.name].join(' ').toLowerCase(); if (!hay.includes(q)) return false; }
     return true;
   });
@@ -523,18 +549,14 @@ function viewExtrato() {
   const older = f.mode === 'month' ? list.filter(x => x.kind === 'expense' && x.method === 'credit' && x.date.slice(0, 7) < f.ym).sort((a, b) => b.date.localeCompare(a.date)) : [];
   const main = list.filter(x => !older.includes(x)).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
   const byDay = {}; main.forEach(x => (byDay[x.date] = byDay[x.date] || []).push(x));
-  const kinds = [['all', 'Todos'], ['expense', 'Despesas'], ['income', 'Receitas'], ['transfer', 'Transferências']];
-  const catName = f.cat ? catOf('expense', f.cat).name : '';
   return `<header class="pagehead"><h1>Extrato</h1><div class="ib"><button class="ibtn" data-act="toggleHide">${S.settings.hide ? I.eyeoff : I.eye}</button></div></header>
   <div class="wrap" style="margin-top:14px">
     <div class="seg" style="margin-bottom:12px"><button class="${f.mode === 'month' ? 'on' : ''}" data-act="efMode" data-m="month">Por mês</button><button class="${f.mode === 'range' ? 'on' : ''}" data-act="efMode" data-m="range">Por período</button></div>
     ${f.mode === 'month' ? `<div class="mnav"><button data-act="em" data-d="-1">${I.left}</button><div class="m">${ymLabel(f.ym)}</div><button data-act="em" data-d="1">${I.right}</button></div>`
       : `<div class="grid2" style="margin-bottom:12px"><label class="fld" style="margin:0"><span class="lb">De (data real)</span><input type="date" class="inp" data-ef="from" value="${f.from}"></label><label class="fld" style="margin:0"><span class="lb">Até</span><input type="date" class="inp" data-ef="to" value="${f.to}"></label></div>`}
     <div class="search">${I.search}<input class="inp" type="search" id="ef-q" placeholder="Buscar descrição, observação…" value="${esc(f.q)}"></div>
-    <div class="chips" style="margin-bottom:8px">${kinds.map(([k, l]) => `<button class="chip ${f.kind === k ? 'on' : ''}" data-act="efKind" data-k="${k}">${l}</button>`).join('')}</div>
-    <div class="chips" style="margin-bottom:8px"><button class="chip ${!f.bank ? 'on' : ''}" data-act="efBank" data-b="">Todos os bancos</button>${S.banks.map(b => `<button class="chip ${f.bank === b.id ? 'on' : ''}" data-act="efBank" data-b="${b.id}"><span class="d" style="--c:${b.color}"></span>${esc(b.name)}</button>`).join('')}</div>
-    <div class="chips" style="margin-bottom:6px"><button class="chip ${!f.method ? 'on' : ''}" data-act="efMethod" data-v="">Qualquer forma</button>${Object.entries(METHODS).map(([k, l]) => `<button class="chip ${f.method === k ? 'on' : ''}" data-act="efMethod" data-v="${k}">${l}</button>`).join('')}
-      ${catName ? `<button class="chip on" data-act="efCat">${esc(catName)} ✕</button>` : ''}</div>
+    <div class="fgrid">${['kinds', 'banks', 'methods', 'cats'].map(k => { const sel = f[k]; const lbl = !sel.length ? 'Todos' : sel.length === 1 ? filterOptName(k, sel[0]) : sel.length + ' selecionados'; return `<button class="fbtn ${sel.length ? 'on' : ''}" data-act="openFilter" data-k="${k}"><div><div class="fl">${FILTER_LABEL[k]}</div><div class="fv">${esc(lbl)}</div></div>${I.right}</button>`; }).join('')}</div>
+    ${f.kinds.length + f.banks.length + f.methods.length + f.cats.length ? '<button class="small" style="color:var(--accent);font-weight:700;margin:2px 4px 4px" data-act="clearFilters">✕ Limpar filtros</button>' : ''}
     <div class="stats3" style="grid-template-columns:1fr 1fr;margin:10px 0 4px">
       <div class="stat" style="background:var(--card)"><div class="l">Entradas</div><div class="v in num">${money(inc)}</div></div>
       <div class="stat" style="background:var(--card)"><div class="l">Saídas</div><div class="v out num">${money(exp)}</div></div></div>
@@ -543,6 +565,23 @@ function viewExtrato() {
     ${Object.keys(byDay).map(d => `<div class="daylabel">${dayLabel(d)}</div><div class="card" style="padding:4px 14px">${byDay[d].map(txRow).join('')}</div>`).join('')}
     ${older.length ? `<div class="daylabel">💳 Parcelas de compras anteriores</div><div class="card" style="padding:4px 14px">${older.map(txRow).join('')}</div>` : ''}
   </div>`;
+}
+
+const FILTER_LABEL = { kinds: 'Tipo', banks: 'Banco', methods: 'Forma de pagamento', cats: 'Categoria' };
+function filterOptions(k) {
+  if (k === 'kinds') return [{ v: 'expense', l: 'Despesas', ic: '🔻' }, { v: 'income', l: 'Receitas', ic: '🔺' }, { v: 'transfer', l: 'Objetivos e faturas', ic: '🔁' }];
+  if (k === 'banks') return S.banks.map(b => ({ v: b.id, l: b.name, c: b.color })).concat([{ v: '_cash', l: 'Dinheiro (sem banco)', ic: '💵' }]);
+  if (k === 'methods') return Object.entries(METHODS).map(([v, l]) => ({ v, l }));
+  return S.cats.expense.map(c => ({ v: c.id, l: c.name, ic: c.icon, g: 'Despesas' })).concat(S.cats.income.map(c => ({ v: c.id, l: c.name, ic: c.icon, g: 'Receitas' })));
+}
+const filterOptName = (k, v) => (filterOptions(k).find(o => o.v === v) || { l: '—' }).l;
+let FS = null;
+function filterHtml() {
+  const opts = filterOptions(FS.k); let lastG = '';
+  return `<button class="opt ${!FS.sel.length ? 'on' : ''}" data-act="fsAll"><span class="ck">${!FS.sel.length ? '✓' : ''}</span><b>Todos</b></button>
+    ${opts.map(o => { const on = FS.sel.includes(o.v); const h = o.g && o.g !== lastG ? `<div class="opt-h">${o.g}</div>` : ''; lastG = o.g || lastG;
+      return h + `<button class="opt ${on ? 'on' : ''}" data-act="fsToggle" data-v="${esc(o.v)}"><span class="ck">${on ? '✓' : ''}</span>${o.c ? `<span class="d" style="--c:${o.c}"></span>` : o.ic ? `<span class="ic">${o.ic}</span>` : ''}<span>${esc(o.l)}</span></button>`; }).join('')}
+    <div class="sticky-act"><button class="btn" data-act="fsAll">Limpar</button><button class="btn pri" data-act="fsApply">Aplicar${FS.sel.length ? ` (${FS.sel.length})` : ''}</button></div>`;
 }
 
 /* ---------- Bancos ---------- */
@@ -567,8 +606,7 @@ function viewBancos() {
     <div class="sec-t">Controle</div>
     <div class="card" style="padding:4px 14px">
       <button class="row" style="width:100%;text-align:left" data-act="tab" data-tab="extrato"><div class="ico">🧾</div><div class="mid"><div class="t">Extrato completo</div><div class="st">Filtre por data, banco e tipo</div></div>${I.right}</button>
-      <button class="row" style="width:100%;text-align:left" data-act="manageCats"><div class="ico">🏷️</div><div class="mid"><div class="t">Categorias</div><div class="st">Adicione ou remova categorias</div></div>${I.right}</button>
-      <button class="row" style="width:100%;text-align:left" data-act="tab" data-tab="config"><div class="ico">⚙️</div><div class="mid"><div class="t">Ajustes e backup</div><div class="st">Nome, tema, cópia de segurança</div></div>${I.right}</button>
+      <button class="row" style="width:100%;text-align:left" data-act="manageCats"><div class="ico">🏷️</div><div class="mid"><div class="t">Categorias</div><div class="st">Cadastre, edite ou remova</div></div>${I.right}</button>
     </div>
   </div>`;
 }
@@ -628,18 +666,20 @@ function viewConfig() {
     <div class="card"><h3>💾 Cópia de segurança</h3>
       <div class="small muted" style="margin-bottom:12px">Seus dados ficam só neste celular. Faça uma cópia de vez em quando (salve no iCloud Drive, por exemplo) para não perder nada se trocar de aparelho.</div>
       <div class="btns"><button class="btn" data-act="exportData">⬆️ Exportar</button><button class="btn" data-act="importData">⬇️ Importar</button></div>
-      <input type="file" id="imp-file" accept=".json,application/json" style="display:none">
       <div class="tiny muted" style="margin-top:10px">${S.tx.length} lançamentos · ${S.banks.length} bancos · ${S.goals.length} objetivos</div></div>
     <div class="card"><h3>📲 Instalar no iPhone</h3><div class="small">No Safari, toque em <b>Compartilhar</b> (quadrado com seta ↑) e depois em <b>Adicionar à Tela de Início</b>. O app passa a abrir em tela cheia e funciona sem internet.</div></div>
     <div class="card"><h3 style="color:var(--out)">⚠️ Zona de perigo</h3><button class="btn danger" data-act="wipe">Apagar todos os dados</button></div>
-    <div class="tiny muted" style="text-align:center;margin:10px 0 20px">Finanças · versão 1.1 · funciona offline</div>
+    <div class="tiny muted" style="text-align:center;margin:10px 0 20px">Finanças · versão 1.2 · funciona offline</div>
   </div>`;
 }
 
 /* ================= Sheets (telas por cima) ================= */
 let sheetOnClose = null;
+let lockY = 0;
+function lockScroll() { if (document.body.classList.contains('locked')) return; lockY = window.scrollY; document.body.style.top = -lockY + 'px'; document.body.classList.add('locked'); }
+function unlockScroll() { if (!document.body.classList.contains('locked')) return; document.body.classList.remove('locked'); document.body.style.top = ''; window.scrollTo(0, lockY); }
 function openSheet(title, body, onClose) {
-  closeSheet(true);
+  closeSheet(true); lockScroll();
   const ov = document.createElement('div'); ov.className = 'ov'; ov.id = 'ov'; ov.dataset.act = 'closeSheet';
   const sh = document.createElement('div'); sh.className = 'sheet'; sh.id = 'sheet';
   sh.innerHTML = `<div class="grab"></div><div class="sh"><h2>${title}</h2><button class="x" data-act="closeSheet" aria-label="Fechar">${I.x}</button></div><div class="sb" id="sheet-body">${body}</div>`;
@@ -649,7 +689,7 @@ function openSheet(title, body, onClose) {
 function setSheetBody(html) { const b = document.getElementById('sheet-body'); if (b) { const st = b.scrollTop; b.innerHTML = html; b.scrollTop = st; } }
 function closeSheet(instant) {
   const ov = document.getElementById('ov'), sh = document.getElementById('sheet'); if (!sh) return;
-  ov.id = ''; sh.id = '';
+  ov.id = ''; sh.id = ''; unlockScroll();
   if (instant) { ov.remove(); sh.remove(); }
   else { ov.classList.remove('show'); sh.classList.remove('show'); setTimeout(() => { ov.remove(); sh.remove(); }, 280); }
   const cb = sheetOnClose; sheetOnClose = null; if (cb) cb();
@@ -882,24 +922,42 @@ function payInvForm(bankId, ym) {
 }
 
 /* ---------- Categorias ---------- */
-let catTab = 'expense', newCatIcon = '🏷️';
+let catTab = 'expense', CF = null, REP = null;
+const catUse = id => S.tx.filter(x => x.cat === id).length;
 function catsHtml() {
   const list = S.cats[catTab];
   return `<div class="seg" style="margin-bottom:14px"><button class="${catTab === 'expense' ? 'on' : ''}" data-act="catTab" data-v="expense">Despesas</button><button class="${catTab === 'income' ? 'on' : ''}" data-act="catTab" data-v="income">Receitas</button></div>
-    ${list.map(c => `<div class="row"><div class="ico">${c.icon}</div><div class="mid"><div class="t">${esc(c.name)}</div></div><button class="btn sm" data-act="delCat" data-id="${esc(c.id)}">Remover</button></div>`).join('')}
-    <div class="sec-t" style="margin-left:0">Nova categoria</div>
-    <div class="emojis">${CAT_EMOJIS.map(e => `<button class="${newCatIcon === e ? 'on' : ''}" data-act="catIcon" data-v="${e}">${e}</button>`).join('')}</div>
-    <div style="display:flex;gap:8px"><input class="inp" id="newcat" placeholder="Nome da categoria"><button class="btn sm pri" data-act="addCat">Adicionar</button></div>`;
+    <button class="btn pri" data-act="newCat">${I.plus} Cadastrar nova categoria</button>
+    <div class="sec-t" style="margin-left:0">Categorias de ${catTab === 'expense' ? 'despesa' : 'receita'} <span class="small muted" style="margin-left:6px;font-weight:600">${list.length}</span></div>
+    ${list.map(c => { const n = catUse(c.id); return `<button class="row" style="width:100%;text-align:left" data-act="editCat" data-id="${esc(c.id)}"><div class="ico">${c.icon}</div><div class="mid"><div class="t">${esc(c.name)}</div><div class="st">${n ? n + ' lançamento(s)' : 'Sem lançamentos'}</div></div><span class="small" style="color:var(--accent);font-weight:700">Editar</span></button>`; }).join('')}`;
+}
+function catFormHtml() {
+  const icons = CAT_EMOJIS.includes(CF.icon) ? CAT_EMOJIS : [CF.icon].concat(CAT_EMOJIS);
+  return `<label class="fld"><span class="lb">Nome da categoria</span><input class="inp" id="cat-name" value="${esc(CF.name)}" placeholder="Ex.: Academia"></label>
+    <span class="lb">Ícone</span><div class="emojis">${icons.map(e => `<button class="${CF.icon === e ? 'on' : ''}" data-act="catIcon" data-v="${e}">${e}</button>`).join('')}</div>
+    <button class="btn pri" data-act="saveCat">Salvar categoria</button>
+    <div class="btns" style="margin-top:10px">${CF.id ? '<button class="btn danger" data-act="delCat">Excluir</button>' : ''}<button class="btn" data-act="manageCats">Voltar</button></div>`;
+}
+function repHtml() {
+  const c = S.cats[REP.kind].find(x => x.id === REP.id), others = S.cats[REP.kind].filter(x => x.id !== REP.id);
+  return `<div class="note warn">A categoria <b>${c.icon} ${esc(c.name)}</b> tem <b>${catUse(c.id)} lançamento(s)</b>. Para qual categoria eles devem ir?</div>
+    ${others.map(o => `<button class="opt radio ${REP.to === o.id ? 'on' : ''}" data-act="repPick" data-v="${esc(o.id)}"><span class="ck">${REP.to === o.id ? '✓' : ''}</span><span class="ic">${o.icon}</span><span>${esc(o.name)}</span></button>`).join('')}
+    <div class="sticky-act"><button class="btn" data-act="editCat" data-id="${esc(c.id)}">Cancelar</button><button class="btn danger" data-act="repConfirm">Mover e excluir</button></div>`;
+}
+
+function backupHtml() {
+  const lb = S.settings.lastBackup;
+  return `<div class="note">Seus dados ficam só neste celular. Exporte uma cópia de vez em quando e salve no <b>iCloud Drive</b> (ou mande para você mesmo). Se trocar de celular, é só importar.</div>
+    <div class="det"><span>Última cópia</span><b>${lb ? fmtD(lb) : 'nunca'}</b></div>
+    <div class="det" style="margin-bottom:16px"><span>Conteúdo</span><b>${S.tx.length} lançamentos · ${S.banks.length} bancos</b></div>
+    <button class="btn pri" data-act="exportData">⬆️ Exportar cópia</button>
+    <button class="btn" style="margin-top:10px" data-act="importData">⬇️ Importar cópia</button>`;
 }
 
 /* ---------- Menu do perfil ---------- */
 function profileMenuHtml() {
   const n = S.settings.name;
-  const tiles = [
-    ['pixFriends', '💸', 'Pix amigo', true], ['plusExpense', '🧾', 'Lançar despesa'], ['plusIncome', '💰', 'Lançar receita'],
-    ['menuGoal', '🎯', 'Guardar dinheiro'], ['menuCats', '🏷️', 'Categorias'], ['toggleHideMenu', S.settings.hide ? '👁️' : '🙈', S.settings.hide ? 'Mostrar valores' : 'Ocultar valores'],
-    ['menuBackup', '💾', 'Cópia de segurança'], ['menuBanks', '🏦', 'Bancos'], ['menuConfig', '⚙️', 'Ajustes']
-  ];
+  const tiles = [['pixFriends', '💸', 'Pix amigo', true], ['menuBackup', '💾', 'Cópia de segurança']];
   return `<div class="profile"><div class="avatar">${esc(initials(n))}</div><div><div style="font-weight:800;font-size:18px">${esc(n)}</div><div class="small muted">${S.friends.length} amigo(s) no Pix · ${S.banks.length} banco(s)</div></div></div>
     <div class="menu-grid">${tiles.map(([a, e, l, hl]) => `<button class="mtile ${hl ? 'hl' : ''}" data-act="${a}"><span class="e">${e}</span>${l}</button>`).join('')}</div>`;
 }
@@ -993,7 +1051,7 @@ document.addEventListener('change', e => {
 
 /* ================= Ações ================= */
 const A = {
-  onbGo: () => { const v = (document.getElementById('onb-name').value || '').trim(); if (!v) return toast('Digite seu nome'); S.settings.name = v; save(); render(); setTimeout(() => openBankForm(null), 400); },
+  onbGo: () => { const v = (document.getElementById('onb-name').value || '').trim(); if (!v) return toast('Digite seu nome'); S.settings.name = v; save(); render(); window.scrollTo(0, 0); },
   tab: el => { ui.tab = el.dataset.tab; if (el.dataset.ym) { ui.ef.mode = 'month'; ui.ef.ym = el.dataset.ym; } render(); window.scrollTo(0, 0); },
   profileMenu: () => openSheet('Menu', profileMenuHtml()),
   pixFriends: () => openFriends(),
@@ -1002,7 +1060,7 @@ const A = {
   menuGoal: el => A.goalMove(el),
   menuCats: () => openSheet('Categorias', catsHtml()),
   toggleHideMenu: () => { S.settings.hide = !S.settings.hide; save(); render(); setSheetBody(profileMenuHtml()); },
-  menuBackup: () => { closeSheet(true); ui.tab = 'config'; render(); window.scrollTo(0, 0); },
+  menuBackup: () => openSheet('💾 Cópia de segurança', backupHtml()),
   menuBanks: () => { closeSheet(true); ui.tab = 'bancos'; render(); window.scrollTo(0, 0); },
   menuConfig: () => { closeSheet(true); ui.tab = 'config'; render(); window.scrollTo(0, 0); },
   newFriend: () => openFriendForm(null),
@@ -1035,12 +1093,13 @@ const A = {
   hm: el => { ui.homeYm = addYm(ui.homeYm, +el.dataset.d); render(); },
   em: el => { ui.ef.ym = addYm(ui.ef.ym, +el.dataset.d); render(); },
   efMode: el => { ui.ef.mode = el.dataset.m; if (ui.ef.mode === 'range' && !ui.ef.from) { ui.ef.from = ui.ef.ym + '-01'; ui.ef.to = ui.ef.ym + '-' + pad(dim(ui.ef.ym)); } render(); },
-  efKind: el => { ui.ef.kind = el.dataset.k; render(); },
-  efBank: el => { ui.ef.bank = el.dataset.b; render(); },
-  efMethod: el => { ui.ef.method = el.dataset.v; render(); },
-  efCat: () => { ui.ef.cat = ''; render(); },
-  catFilter: el => { Object.assign(ui.ef, { mode: 'month', ym: el.dataset.ym, cat: el.dataset.cat, kind: 'expense', bank: '', method: '', q: '' }); ui.tab = 'extrato'; render(); window.scrollTo(0, 0); },
-  bankExtrato: el => { Object.assign(ui.ef, { bank: el.dataset.id, kind: 'all', cat: '', method: '' }); ui.tab = 'extrato'; render(); window.scrollTo(0, 0); },
+  openFilter: el => { FS = { k: el.dataset.k, sel: ui.ef[el.dataset.k].slice() }; openSheet(FILTER_LABEL[FS.k], filterHtml()); },
+  fsToggle: el => { const v = el.dataset.v; FS.sel = FS.sel.includes(v) ? FS.sel.filter(x => x !== v) : FS.sel.concat(v); if (FS.sel.length === filterOptions(FS.k).length) FS.sel = []; setSheetBody(filterHtml()); },
+  fsAll: () => { FS.sel = []; setSheetBody(filterHtml()); },
+  fsApply: () => { ui.ef[FS.k] = FS.sel.slice(); closeSheet(); render(); },
+  clearFilters: () => { Object.assign(ui.ef, { kinds: [], banks: [], methods: [], cats: [] }); render(); },
+  catFilter: el => { Object.assign(ui.ef, { mode: 'month', ym: el.dataset.ym, cats: [el.dataset.cat], kinds: ['expense'], banks: [], methods: [], q: '' }); ui.tab = 'extrato'; render(); window.scrollTo(0, 0); },
+  bankExtrato: el => { Object.assign(ui.ef, { banks: [el.dataset.id], kinds: [], cats: [], methods: [] }); ui.tab = 'extrato'; render(); window.scrollTo(0, 0); },
   plusMenu: () => openSheet('Novo lançamento', `<div style="display:grid;gap:10px">
       <button class="row" style="width:100%;text-align:left;background:var(--bg);border-radius:16px;padding:12px;border:0" data-act="newTx" data-kind="expense"><div class="ico" style="background:var(--out-soft);color:var(--out)">${I.down}</div><div class="mid"><div class="t">Despesa</div><div class="st">Débito, Pix, crédito ou dinheiro</div></div></button>
       <button class="row" style="width:100%;text-align:left;background:var(--bg);border-radius:16px;padding:12px;border:0" data-act="newTx" data-kind="income"><div class="ico" style="background:var(--in-soft);color:var(--in)">${I.up}</div><div class="mid"><div class="t">Receita</div><div class="st">Salário, 13º, vendas…</div></div></button>
@@ -1107,16 +1166,37 @@ const A = {
   setTheme: el => { S.settings.theme = el.dataset.t; save(); render(); },
   manageCats: () => openSheet('Categorias', catsHtml()),
   catTab: el => { catTab = el.dataset.v; setSheetBody(catsHtml()); },
-  catIcon: el => { newCatIcon = el.dataset.v; document.querySelectorAll('#sheet-body .emojis button').forEach(b => b.classList.toggle('on', b.dataset.v === newCatIcon)); },
-  addCat: () => { const n = (document.getElementById('newcat').value || '').trim(); if (!n) return toast('Digite o nome'); S.cats[catTab].push({ id: 'c_' + uid(), name: n, icon: newCatIcon }); save(); setSheetBody(catsHtml()); toast('Categoria criada ✓'); },
-  delCat: async el => {
-    const id = el.dataset.id, used = S.tx.some(x => x.cat === id);
-    if (S.cats[catTab].length <= 1) return toast('Mantenha ao menos uma categoria');
-    S.cats[catTab] = S.cats[catTab].filter(c => c.id !== id); save(); setSheetBody(catsHtml());
-    toast(used ? 'Removida (lançamentos antigos ficam como “Sem categoria”)' : 'Categoria removida');
+  newCat: () => { CF = { kind: catTab, id: '', name: '', icon: '🏷️' }; openSheet('Nova categoria', catFormHtml()); },
+  editCat: el => { const c = S.cats[catTab].find(x => x.id === el.dataset.id); if (!c) return; CF = { kind: catTab, id: c.id, name: c.name, icon: c.icon }; openSheet('Editar categoria', catFormHtml()); },
+  catIcon: el => { CF.icon = el.dataset.v; document.querySelectorAll('#sheet-body .emojis button').forEach(b => b.classList.toggle('on', b.dataset.v === CF.icon)); },
+  saveCat: () => {
+    const n = (document.getElementById('cat-name').value || '').trim(); if (!n) return toast('Digite o nome');
+    const list = S.cats[CF.kind];
+    if (list.some(c => c.id !== CF.id && c.name.toLowerCase() === n.toLowerCase())) return toast('Já existe uma categoria com esse nome');
+    if (CF.id) Object.assign(list.find(c => c.id === CF.id), { name: n, icon: CF.icon }); else list.push({ id: 'c_' + uid(), name: n, icon: CF.icon });
+    save(); render(); openSheet('Categorias', catsHtml()); toast(CF.id ? 'Categoria atualizada ✓' : 'Categoria criada ✓');
+  },
+  delCat: async () => {
+    const list = S.cats[CF.kind];
+    if (list.length <= 1) return toast('Mantenha ao menos uma categoria');
+    if (catUse(CF.id)) { REP = { kind: CF.kind, id: CF.id, to: '' }; openSheet('Excluir categoria', repHtml()); return; }
+    if (!await ask(`Excluir a categoria <b>${esc(CF.name)}</b>?`, 'Excluir', true)) return openSheet('Categorias', catsHtml());
+    S.cats[CF.kind] = list.filter(c => c.id !== CF.id); S.friends.forEach(f => { if (f.cat === CF.id) f.cat = ''; });
+    save(); render(); openSheet('Categorias', catsHtml()); toast('Categoria excluída');
+  },
+  repPick: el => { REP.to = el.dataset.v; setSheetBody(repHtml()); },
+  repConfirm: () => {
+    if (!REP.to) return toast('Escolha a categoria que vai receber os lançamentos');
+    const n = catUse(REP.id);
+    S.tx.forEach(x => { if (x.cat === REP.id) x.cat = REP.to; });
+    S.friends.forEach(f => { if (f.cat === REP.id) f.cat = REP.to; });
+    ui.ef.cats = ui.ef.cats.filter(c => c !== REP.id);
+    S.cats[REP.kind] = S.cats[REP.kind].filter(c => c.id !== REP.id);
+    save(); render(); openSheet('Categorias', catsHtml()); toast(n + ' lançamento(s) movido(s) e categoria excluída ✓');
   },
   exportData: async () => {
     const name = 'financas-backup-' + today() + '.json';
+    S.settings.lastBackup = today(); save();
     const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' });
     const file = new File([blob], name, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'Backup Finanças' }); return; } catch (e) { if (e.name === 'AbortError') return; } }
